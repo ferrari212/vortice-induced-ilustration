@@ -1,0 +1,29 @@
+canvas {
+  border: 1px black solid;
+  /* background: red; */
+}
+
+body {
+  margin: 0;
+}
+
+/* Color Theme Swatches in Hex */
+.Sailing-yacht-regatta.-Yachting.-Sailing-1-hex { color: #011C40; }
+.Sailing-yacht-regatta.-Yachting.-Sailing-2-hex { color: #8AA6BF; }
+.Sailing-yacht-regatta.-Yachting.-Sailing-3-hex { color: #DCE8F2; }
+.Sailing-yacht-regatta.-Yachting.-Sailing-4-hex { color: #295773; }
+.Sailing-yacht-regatta.-Yachting.-Sailing-5-hex { color: #A60D0D; }
+
+/* Color Theme Swatches in RGBA */
+.Sailing-yacht-regatta.-Yachting.-Sailing-1-rgba { color: rgba(1, 28, 63, 1); }
+.Sailing-yacht-regatta.-Yachting.-Sailing-2-rgba { color: rgba(137, 166, 191, 1); }
+.Sailing-yacht-regatta.-Yachting.-Sailing-3-rgba { color: rgba(220, 232, 242, 1); }
+.Sailing-yacht-regatta.-Yachting.-Sailing-4-rgba { color: rgba(41, 86, 114, 1); }
+.Sailing-yacht-regatta.-Yachting.-Sailing-5-rgba { color: rgba(165, 13, 13, 1); }
+
+/* Color Theme Swatches in HSLA */
+.Sailing-yacht-regatta.-Yachting.-Sailing-1-hsla { color: hsla(213, 96, 12, 1); }
+.Sailing-yacht-regatta.-Yachting.-Sailing-2-hsla { color: hsla(208, 29, 64, 1); }
+.Sailing-yacht-regatta.-Yachting.-Sailing-3-hsla { color: hsla(208, 46, 90, 1); }
+.Sailing-yacht-regatta.-Yachting.-Sailing-4-hsla { color: hsla(202, 47, 30, 1); }
+.Sailing-yacht-regatta.-Yachting.-Sailing-5-hsla { color: hsla(0, 85, 35, 1); }

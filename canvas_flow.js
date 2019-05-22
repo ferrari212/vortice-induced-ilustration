@@ -8,10 +8,25 @@ function randomColor(colors) {
 }
 
 function distance(x1, y1, x2, y2) {
-  const xDist = x2 - x1
-  const yDist = y2 - y1
+  const xDist = x2 - x1;
+  const yDist = y2 - y1;
 
-  return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2))
+  return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
+}
+
+function trigonometricValues(x1, y1, x2, y2){
+  const c1 = x2 - x1;
+  const c2 = y2 - y1;
+  const h = distance(x1, y1, x2, y2);
+
+  return [c1/h, c2/h, c1/c2];
+}
+
+function orthogonalization(v1, v2, cos, sin){
+  const u = cos * v1 - sin * v2;
+  const v = sin * v1 + cos * v2;
+
+  return [u, v];
 }
 
 const canvas = document.querySelector('canvas')
@@ -50,35 +65,33 @@ addEventListener('resize', () => {
 function Circle() {
     this.x = innerWidth / 2;
     this.y = innerHeight / 2;
-    this.radius = 50;
+    this.radius = innerWidth/16;
     this.color = '#000000';
-    // this.velocity = 2;
-    // this.omega = 0;
-    // this.domega = 0.05;
-    // this.lastMouse = {x: x, y: y};
+    this.U = 2;
 
     this.draw = function() {
       c.beginPath();
       c.arc(this.x, this.y, this.radius , 0, Math.PI*2, false);
-      // Remember to insert here the function of velocity
-      // c.fillStyle = colorArray[Math.floor(Math.random()*colorArray.length)];
       c.fillStyle = this.color;
       c.fill();
       c.strokeStyle = 'black';
       c.stroke();
       c.closePath();
     }
-
-    // this.draw();
 }
 
 // Create Particles
 function Particle(x, y, radius, color) {
     this.x = x;
     this.y = y;
+    this.cos;
+    this.sin;
+    this.tan;
+    this.vx;
+    this.vy;
+    this.distance;
     this.radius = 10;
     this.color = color;
-    this.velocity = 2;
     this.omega = 0;
     this.domega = 0.05;
     this.lastMouse = {x: x, y: y};
@@ -88,9 +101,6 @@ Particle.prototype.draw = function(lastPoint) {
     c.beginPath();
     c.strokeStyle = this.color;
     c.lineWidth = this.radius;
-    // c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
-    // c.fillStyle = this.color
-    // c.fill()
     c.moveTo(lastPoint.x, lastPoint.y);
     c.lineTo(this.x, this.y);
     c.stroke();
@@ -99,22 +109,23 @@ Particle.prototype.draw = function(lastPoint) {
 }
 
 Particle.prototype.update = function() {
-    const lastPoint = {x: this.x + this.velocity, y: this.y};
+    // Move Points over time
+    this.omega = 0;
+    [this.cos, this.sin, this.tan] = trigonometricValues(circle.x, circle.y, this.x, this.y);
+    this.distance = distance(circle.x, circle.y, this.x, this.y);
+
+    const alpha = (Math.pow(circle.radius/this.distance, 2));
+    const v = {r: circle.U*(1-alpha)*this.cos, theta: -circle.U*(1+alpha)*this.sin};
+
+    // ortogonalization function
+    [this.vx, this.vy] = orthogonalization(v.r, v.theta, this.cos, this.sin);
+
+    const lastPoint = {x: this.x + this.vx, y: this.y + this.vy};
+
 
     if (lastPoint.x > canvas.width) {
       lastPoint.x = 0;
     }
-
-    // Move Points over time
-    this.omega = 0;
-
-    // Drag Effect
-    // this.lastMouse.x += (mouse.x - this.lastMouse.x) * 0.05;
-    // this.lastMouse.y += (mouse.y - this.lastMouse.y) * 0.05;
-
-    // circular mortion
-    // this.x = Math.cos(this.omega);
-    // this.y = Math.sin(this.omega);
     this.x = lastPoint.x + Math.cos(this.omega);
     this.y = lastPoint.y + Math.sin(this.omega);
     this.draw(lastPoint);
@@ -128,7 +139,6 @@ let x;
 let y;
 
 function init() {
-    circle = [];
     particles = [];
 
     circle = new Circle();

@@ -63,11 +63,11 @@ addEventListener('resize', () => {
 
 // Create Circunference
 function Circle() {
-    this.x = innerWidth / 2;
+    this.x = innerWidth / 4;
     this.y = innerHeight / 2;
-    this.radius = innerWidth/16;
+    this.radius = innerWidth/32;
     this.color = '#000000';
-    this.U = 2;
+    this.U = 1;
 
     this.draw = function() {
       c.beginPath();
@@ -90,6 +90,12 @@ function Particle(x, y, radius, color) {
     this.vx;
     this.vy;
     this.distance;
+    this.vcos = [];
+    this.vsin = [];
+    this.vtan = [];
+    this.vvx = [];
+    this.vvy = [];
+    this.vorcirculation = [];
     this.radius = 10;
     this.color = color;
     this.omega = 0;
@@ -111,43 +117,95 @@ Particle.prototype.draw = function(lastPoint) {
 Particle.prototype.update = function() {
     // Move Points over time
     this.omega = 0;
+
+    // Relations to center fo circle
     [this.cos, this.sin, this.tan] = trigonometricValues(circle.x, circle.y, this.x, this.y);
     this.distance = distance(circle.x, circle.y, this.x, this.y);
 
+
     const alpha = (Math.pow(circle.radius/this.distance, 2));
+
+    // linear velocity due circunference presence
     const v = {r: circle.U*(1-alpha)*this.cos, theta: -circle.U*(1+alpha)*this.sin};
 
     // ortogonalization function
     [this.vx, this.vy] = orthogonalization(v.r, v.theta, this.cos, this.sin);
 
-    const lastPoint = {x: this.x + this.vx, y: this.y + this.vy};
+    // angular velocity due vorticity presence
+    for (var i = 0; i < vortices.length; i++) {
+      this.vorcirculation[i] = vortices[i].localcirculation/distance(vortices[i].x, vortices[i].y, this.x, this.y);
+      [this.vcos[i], this.vsin[i], this.vtan[i]] = trigonometricValues(vortices[i].x, vortices[i].y, this.x, this.y);
+      [this.vvx[i], this.vvy[i]] = orthogonalization(-0.05 * Math.abs(this.vorcirculation[i]), this.vorcirculation[i], this.vcos[i], this.vsin[i]);
 
+      this.vx += this.vvx[i];
+      this.vy += this.vvy[i];
+    }
+
+    const lastPoint = {x: this.x + this.vx,
+                       y: this.y + this.vy};
 
     if (lastPoint.x > canvas.width) {
       lastPoint.x = 0;
+      lastPoint.y = randomIntFromRange(-100,  canvas.height + 100);
+      this.vy = 0;
     }
+
+    // if (lastPoint.y < canvas.width) {
+    //   lastPoint.x = 0;
+    // }
+
     this.x = lastPoint.x + Math.cos(this.omega);
     this.y = lastPoint.y + Math.sin(this.omega);
     this.draw(lastPoint);
 
 }
 
+// Create vortices
+function Vortex() {
+    this.xorigin = circle.x + 0.5*circle.radius;
+    this.binar = 2 * (createdVortices % 2) - 1;
+    createdVortices += 1;
+    this.y = circle.y - circle.radius * this.binar;
+    this.x = this.xorigin;
+    this.circulation = 500 * this.binar;
+    this.ratio;
+    this.localcirculation;
+    this.create = true;
+
+    this.update = function() {
+        // Move Points over time
+        this.x += circle.U;
+
+        this.ratio = (this.x - this.xorigin)/innerWidth;
+        this.localcirculation = this.circulation * Math.cos(2 * Math.PI * this.ratio) * (this.ratio/Math.pow((this.ratio + 0.25), 2));
+    }
+
+    this.update();
+}
+
 // Implementation
 let circle;
 let particles;
+let vortices;
 let x;
 let y;
 
+var createVortex = false;
+var createdVortices = 0;
+
 function init() {
     particles = [];
+    vortices = [];
 
     circle = new Circle();
     circle.draw();
 
+    vortices[0] = new Vortex();
+
     for (let i = 0; i < 1000; i++) {
       const radius = (Math.random() * 2) + 1;
-      x = randomIntFromRange(0,  canvas.width);
-      y = randomIntFromRange(0,  canvas.height);
+      x = randomIntFromRange(-100,  canvas.width);
+      y = randomIntFromRange(-100,  canvas.height + 100);
       particles.push( new Particle(x, y, radius, randomColor(colors)))
     }
     // console.log(particles);
@@ -160,9 +218,31 @@ function animate() {
     c.fillStyle = 'rgba(255, 255, 255, 0.01)';
     c.fillRect(0, 0, canvas.width, canvas.height);
 
+      vortices.forEach(vortex => {
+        vortex.update();
+     });
+
+     for (var i = 0; i < vortices.length; i++) {
+        if (vortices[i].x > 2 * canvas.width) {
+          vortices.splice(i, 1);
+        }
+
+        if (vortices[i].create && Math.sign(vortices[i].localcirculation) != vortices[i].binar) {
+        // if (vortices[i].create && vortices[i].ratio > 0.2) {
+          createVortex = true;
+          vortices[i].create = false;
+          // debugger
+        }
+     }
+
+     if (createVortex) {
+       vortices.push( new Vortex());
+       createVortex = false;
+     }
+
     // c.fillText('HTML CANVAS BOILERPLATE', mouse.x, mouse.y)
     particles.forEach(particle => {
-     particle.update()
+     particle.update();
    });
 
    circle.draw();

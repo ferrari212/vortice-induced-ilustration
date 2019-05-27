@@ -67,7 +67,7 @@ function Circle() {
     this.y = innerHeight / 2;
     this.radius = innerWidth/32;
     this.color = '#000000';
-    this.U = innerWidth/1000;
+    this.U = (innerWidth > 1000 ? innerWidth/1000 : 1);
 
     this.draw = function() {
       c.beginPath();
@@ -98,18 +98,16 @@ function Particle(x, y, radius, color) {
     this.vorcirculation = [];
     this.radius = 1;
     this.color = color;
-    this.omega = 0;
-    this.domega = 0.05;
     this.lastMouse = {x: x, y: y};
 }
 
 Particle.prototype.draw = function(lastPoint) {
     c.beginPath();
-    c.strokeStyle = this.color;
-    c.lineWidth = this.radius;
-    c.moveTo(lastPoint.x, lastPoint.y);
-    c.lineTo(this.x, this.y);
-    c.stroke();
+    c.arc(this.x, this.y, this.radius , 0, Math.PI*2, false);
+    // Remember to insert here the function of velocity
+    // c.fillStyle = colorArray[Math.floor(Math.random()*colorArray.length)];
+    c.fillStyle = this.color;
+    c.fill();
     c.closePath();
 }
 
@@ -145,12 +143,12 @@ Particle.prototype.update = function() {
 
     if (lastPoint.x > 1.1*canvas.width) {
       lastPoint.x = 0;
-      lastPoint.y = randomIntFromRange(-100,  canvas.height + 100);
+      lastPoint.y = randomIntFromRange(circle.y - 1.5*circle.radius,  circle.y + 1.5*circle.radius);
       this.vy = 0;
     }
 
-    this.x = lastPoint.x + Math.cos(this.omega);
-    this.y = lastPoint.y + Math.sin(this.omega);
+    this.x = lastPoint.x;
+    this.y = lastPoint.y;
     this.draw(lastPoint);
 
 }
@@ -162,7 +160,7 @@ function Vortex() {
     createdVortices += 1;
     this.y = circle.y - circle.radius * this.binar;
     this.x = this.xorigin;
-    this.circulation = 10 * circle.radius * this.binar;
+    this.circulation = 8 * circle.radius * this.binar;
     this.ratio;
     this.localcirculation;
     this.create = true;
@@ -182,8 +180,7 @@ function Vortex() {
 let circle;
 let particles;
 let vortices;
-let x;
-let y;
+
 
 var createVortex = false;
 var createdVortices = 0;
@@ -197,21 +194,27 @@ function init() {
 
     vortices[0] = new Vortex();
 
-    for (let i = 0; i < 5000; i++) {
-      const radius = (Math.random() * 2) + 1;
-      x = randomIntFromRange(-100,  canvas.width);
-      y = randomIntFromRange(-100,  canvas.height + 100);
-      particles.push( new Particle(x, y, radius, randomColor(colors)))
-    }
+    // for (let i = 0; i < 5000; i++) {
+    //   const radius = (Math.random() * 2) + 1;
+    //   x = randomIntFromRange(-100,  canvas.width);
+    //   y = randomIntFromRange(-100,  canvas.height + 100);
+    //   particles.push( new Particle(x, y, radius, randomColor(colors)))
+    // }
     // console.log(particles);
 }
 
+let y;
 // Animation Loop
 function animate() {
     requestAnimationFrame(animate)
     // c.clearRect(0, 0, canvas.width, canvas.height)
-    c.fillStyle = 'rgba(255, 255, 255, 0.01)';
+    c.fillStyle = 'rgba(255, 255, 255, 0.1)';
     c.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (particles.length < 2000) {
+      y = randomIntFromRange(circle.y - 1.5*circle.radius,  circle.y + 1.5*circle.radius);
+      particles.push( new Particle(0, y, 1, randomColor(colors)));
+    }
 
       vortices.forEach(vortex => {
         vortex.update();
@@ -229,6 +232,7 @@ function animate() {
           // debugger
         }
      }
+
 
      if (createVortex) {
        vortices.push( new Vortex());
